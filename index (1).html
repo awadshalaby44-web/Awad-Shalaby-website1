@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الأستاذ عوض شلبي للأحياء</title>
+    <style>
+        :root {
+            --emerald: #2ecc71; --oxford: #2c3e50; --bg: #f4f7f6;
+            --white: #ffffff; --text: #2c3e50; --gold: #f1c40f;
+            --silver: #bdc3c7; --bronze: #cd7f32;
+        }
+        
+        body.dark-mode { 
+            --bg: #121212; 
+            --white: #1e1e1e; 
+            --text: #e0e0e0;
+            --oxford: #000000; 
+        }
+        
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background: var(--bg); color: var(--text); transition: 0.3s; overflow-x: hidden; padding-bottom: 120px; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
+        header { background: linear-gradient(135deg, var(--oxford), #16a085); color: white; padding: 60px 20px; text-align: center; position: relative; }
+        .controls-top { position: absolute; top: 20px; left: 20px; display: flex; gap: 10px; }
+        .container { max-width: 900px; margin: -30px auto 40px; padding: 0 15px; }
+        .card { background: var(--white); padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 25px; border-top: 5px solid var(--emerald); transition: 0.3s; }
+
+        .podium { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 30px 0; min-height: 180px; }
+        .rank { width: 30%; padding: 15px 5px; border-radius: 15px 15px 0 0; color: white; text-align: center; font-weight: bold; }
+        .rank-2 { background: var(--silver); height: 110px; order: 1; }
+        .rank-1 { background: var(--gold); height: 150px; order: 2; transform: scale(1.1); }
+        .rank-3 { background: var(--bronze); height: 90px; order: 3; }
+
+        .admin-only { display: none !important; }
+        body:not(.student-mode) .admin-only { display: block !important; }
+        body:not(.student-mode) .student-input-area { display: none !important; }
+
+        #loginModal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+        .modal-content { background: var(--white); margin: 15% auto; padding: 30px; width: 300px; border-radius: 20px; text-align: center; color: var(--text); }
+
+        .btn { padding: 12px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; text-decoration: none; }
+        .btn-emerald { background: var(--emerald); color: white; width: 100%; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid rgba(128,128,128,0.3); border-radius: 8px; box-sizing: border-box; background: var(--white); color: var(--text); }
+
+        .q-item { background: rgba(46, 204, 113, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-right: 4px solid var(--emerald); }
+        .ans-text { background: var(--white); padding: 10px; border-radius: 8px; margin-top: 10px; display: block; font-weight: bold; color: var(--emerald); border: 1px solid var(--emerald); }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border-bottom: 1px solid rgba(128,128,128,0.2); text-align: center; color: var(--text); }
+
+        .quran-player { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--oxford); color: white; padding: 10px; text-align: center; z-index: 1000; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .quran-info { font-size: 0.85rem; font-weight: bold; color: #ecf0f1; }
+        .quran-info span { color: var(--emerald); }
+
+        .contact-btn { position: fixed; bottom: 85px; right: 20px; background: #25d366; color: white; padding: 12px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; z-index: 999; display: flex; align-items: center; gap: 10px; }
+        footer { text-align: center; padding: 20px; color: var(--text); opacity: 0.7; font-size: 0.9rem; }
+    </style>
+</head>
+<body class="student-mode">
+
+<canvas id="canvas-container"></canvas>
+
+<a href="https://wa.me/201007182936" class="contact-btn" target="_blank">💬 تواصل مع المستر</a>
+
+<div class="quran-player">
+    <div class="quran-info">📻 إذاعة القرآن الكريم - <span>على روح والدي</span></div>
+    <audio controls style="height: 30px;"><source src="https://qurango.net/radio/tarateel" type="audio/mpeg"></audio>
+</div>
+
+<div id="loginModal">
+    <div class="modal-content">
+        <h3>🔐 دخول المستر</h3>
+        <input type="text" id="adminPass" placeholder="كلمة السر">
+        <button class="btn btn-emerald" onclick="login()">دخول</button>
+        <p onclick="closeLogin()" style="cursor:pointer; margin-top:10px;">إلغاء</p>
+    </div>
+</div>
+
+<header>
+    <div class="controls-top">
+        <button class="btn" onclick="toggleDarkMode()">☀️/🌙</button>
+        <button class="btn" id="lockBtn" style="background:#34495e; color:white;" onclick="handleAdminBtn()">🔓 خش يا إدارة</button>
+    </div>
+    <h1>🧬 منصة الأستاذ عوض شلبي للأحياء</h1>
+</header>
+
+<div class="container">
+    <div class="card">
+        <h3 id="monthTitle" style="text-align:center">🏆 لوحة شرف المتفوقين</h3>
+        <div class="podium">
+            <div class="rank rank-2"><b id="p2Name">أحمد محمد</b><span>🥈 الثاني</span></div>
+            <div class="rank rank-1"><b id="p1Name">سارة محمود</b><span>🥇 الأول</span></div>
+            <div class="rank rank-3"><b id="p3Name">ياسين علي</b><span>🥉 الثالث</span></div>
+        </div>
+        <div class="admin-only">
+            <input type="text" id="mIn" placeholder="اسم الشهر">
+            <input type="text" id="p1In" placeholder="اسم الأول">
+            <input type="text" id="p2In" placeholder="اسم الثاني">
+            <input type="text" id="p3In" placeholder="اسم الثالث">
+            <button class="btn btn-emerald" onclick="updateHonors()">تحديث لوحة الشرف ✨</button>
+        </div>
+    </div>
+
+    <div class="card student-input-area">
+        <h3>❓ ركن الطلاب: اسأل سؤالك</h3>
+        <input type="text" id="sName" placeholder="اسمك">
+        <textarea id="sQuestion" placeholder="اكتب سؤالك هنا..." rows="2"></textarea>
+        <button class="btn btn-emerald" onclick="sendToMaster()">إرسال السؤال للمستر 🚀</button>
+    </div>
+
+    <div class="card admin-only" style="background: rgba(255, 152, 0, 0.1); border: 2px solid #ff9800;">
+        <h3>📥 الأسئلة الواردة</h3>
+        <div id="masterInbox"></div>
+    </div>
+
+    <div class="card">
+        <h3>💬 بنك الأسئلة المجابة</h3>
+        <div id="publicAnswers">
+            <div class="q-item"><strong>❓ ما هي وظيفة الميتوكوندريا؟</strong><br><small>السائل: طالب متفوق</small><span class="ans-text">✅ رد المستر: هي مركز إنتاج الطاقة في الخلية.</span></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>📝 نتائج امتحانات الطلاب</h3>
+        <table id="gradesTable">
+            <thead><tr><th>الطالب</th><th>الامتحان</th><th>الدرجة</th><th class="admin-only">حذف</th></tr></thead>
+            <tbody>
+                <tr><td>محمد علي</td><td>امتحان الفصل الأول</td><td>50/50</td><td class="admin-only">❌</td></tr>
+            </tbody>
+        </table>
+        <div class="admin-only" style="margin-top:20px;">
+            <input type="text" id="nIn" placeholder="اسم الطالب">
+            <input type="text" id="exIn" placeholder="الامتحان">
+            <input type="number" id="gIn" placeholder="الدرجة">
+            <button class="btn btn-emerald" onclick="addGrade()">رصد النتيجة ✅</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>برمجة وتطوير المهندس عبدالله جلال © <span id="year"></span></p>
+    </footer>
+</div>
+
+<script>
+    // نظام الحفظ المحسن
+    function saveData() {
+        const data = {
+            honors: {
+                month: document.getElementById('monthTitle').innerText,
+                p1: document.getElementById('p1Name').innerText,
+                p2: document.getElementById('p2Name').innerText,
+                p3: document.getElementById('p3Name').innerText
+            },
+            inbox: document.getElementById('masterInbox').innerHTML,
+            public: document.getElementById('publicAnswers').innerHTML,
+            grades: document.querySelector('#gradesTable tbody').innerHTML
+        };
+        localStorage.setItem('awadShalabyData', JSON.stringify(data));
+    }
+
+    window.onload = function() {
+        document.getElementById('year').innerText = new Date().getFullYear();
+        const saved = localStorage.getItem('awadShalabyData');
+        if (saved) {
+            const data = JSON.parse(saved);
+            document.getElementById('monthTitle').innerText = data.honors.month;
+            document.getElementById('p1Name').innerText = data.honors.p1;
+            document.getElementById('p2Name').innerText = data.honors.p2;
+            document.getElementById('p3Name').innerText = data.honors.p3;
+            document.getElementById('masterInbox').innerHTML = data.inbox;
+            document.getElementById('publicAnswers').innerHTML = data.public;
+            document.querySelector('#gradesTable tbody').innerHTML = data.grades;
+        }
+    };
+
+    function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+
+    function handleAdminBtn() {
+        if(document.body.classList.contains('student-mode')) {
+            document.getElementById('loginModal').style.display = 'block';
+        } else {
+            document.body.classList.add('student-mode');
+            document.getElementById('lockBtn').innerText = "🔓 خش يا إدارة";
+        }
+    }
+
+    function login() {
+        if(document.getElementById('adminPass').value === "000000") {
+            document.body.classList.remove('student-mode');
+            document.getElementById('lockBtn').innerText = "🔒 وضع الطالب";
+            closeLogin();
+        } else {
+            document.getElementById('adminPass').placeholder = "خطأ!";
+        }
+    }
+    function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
+
+    function updateHonors() {
+        const m = document.getElementById('mIn').value;
+        if(m) document.getElementById('monthTitle').innerText = "🏆 لوحة شرف شهر " + m;
+        document.getElementById('p1Name').innerText = document.getElementById('p1In').value || "في انتظارك";
+        document.getElementById('p2Name').innerText = document.getElementById('p2In').value || "في انتظارك";
+        document.getElementById('p3Name').innerText = document.getElementById('p3In').value || "في انتظارك";
+        saveData();
+    }
+
+    function sendToMaster() {
+        const n = document.getElementById('sName').value, q = document.getElementById('sQuestion').value;
+        if(!n || !q) return;
+        const id = Date.now();
+        const div = document.createElement('div');
+        div.className = 'q-item'; div.id = `q-${id}`;
+        div.innerHTML = `<strong>من: ${n}</strong><p>${q}</p><textarea id="rep-${id}" placeholder="رد المستر..."></textarea><button class="btn btn-emerald" onclick="masterReply(${id}, '${n}', '${q}')">رد ونشر</button>`;
+        document.getElementById('masterInbox').appendChild(div);
+        saveData();
+        document.getElementById('sName').value = ""; document.getElementById('sQuestion').value = "";
+    }
+
+    function masterReply(id, n, q) {
+        const r = document.getElementById(`rep-${id}`).value;
+        const div = document.createElement('div');
+        div.className = 'q-item';
+        div.innerHTML = `<strong>❓ ${q}</strong><br><small>السائل: ${n}</small><span class="ans-text">✅ رد المستر: ${r}</span><button class=\"admin-only\" onclick=\"this.parentElement.remove();saveData();\">حذف</button>`;
+        document.getElementById('publicAnswers').prepend(div);
+        document.getElementById(`q-${id}`).remove();
+        saveData();
+    }
+
+    function addGrade() {
+        const n = document.getElementById('nIn').value, ex = document.getElementById('exIn').value, g = document.getElementById('gIn').value;
+        if(!n || !ex || !g) return;
+        const row = document.querySelector('#gradesTable tbody').insertRow();
+        row.innerHTML = `<td>${n}</td><td>${ex}</td><td>${g}</td><td class="admin-only" onclick="this.parentElement.remove();saveData();">❌</td>`;
+        saveData();
+    }
+
+    const canvas = document.getElementById('canvas-container'), ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    let particles = [];
+    for(let i=0; i<30; i++) particles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:Math.random()-0.3, vy:Math.random()-0.3});
+    function anim() {
+        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(46, 204, 113, 0.1)";
+        particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy;
+            if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+            ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+        });
+        requestAnimationFrame(anim);
+    }
+    anim();
+</script>
+</body>
+</html>
